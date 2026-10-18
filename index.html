@@ -1,0 +1,2533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FraudGuard — Multi-Account Abuse Prevention System (Standalone Demo)</title>
+  <style>
+    /* ========================================================
+       FRAUDGUARD DESIGN SYSTEM (OFFLINE / ZERO DEPENDENCY)
+       ======================================================== */
+    :root {
+      --bg-main: #07090d;
+      --bg-card: #0c1016;
+      --bg-card-hover: #10161f;
+      --bg-input: #080b10;
+      --border-subtle: #1b222b;
+      --border-card: #252d38;
+      --border-focus: #00f5a0;
+      --text-main: #f5f7fa;
+      --text-muted: #8b949e;
+      --text-dim: #505a65;
+      
+      --color-allow: #00f5a0;
+      --color-allow-bg: rgba(0, 245, 160, 0.08);
+      --color-allow-border: #245a47;
+      
+      --color-monitor: #ffd166;
+      --color-challenge: #ffd166;
+      --color-challenge-bg: rgba(255, 209, 102, 0.08);
+      --color-challenge-border: #665622;
+      
+      --color-review: #ff9b70;
+      --color-review-bg: rgba(255, 155, 112, 0.08);
+      --color-review-border: #6a3928;
+      
+      --color-block: #ff4d6d;
+      --color-block-bg: rgba(255, 77, 109, 0.08);
+      --color-block-border: #70283a;
+      
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Cyber grid overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 245, 160, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 245, 160, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Top Notice Banner */
+    .demo-banner {
+      position: relative;
+      z-index: 10;
+      background: #0f1620;
+      border-bottom: 1px solid #1f2c3d;
+      padding: 8px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #9cb0c6;
+    }
+
+    .demo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      background: rgba(0, 245, 160, 0.12);
+      border: 1px solid var(--border-focus);
+      color: var(--color-allow);
+      font-weight: 700;
+      letter-spacing: 1px;
+      border-radius: 2px;
+      font-size: 10px;
+    }
+
+    .demo-notice-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .demo-notice-text strong {
+      color: #e2e8f0;
+    }
+
+    /* Main Navbar */
+    .navbar {
+      position: relative;
+      z-index: 10;
+      height: 70px;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(7, 9, 13, 0.94);
+      backdrop-filter: blur(8px);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .logo-badge {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--color-allow);
+      color: var(--color-allow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      box-shadow: 0 0 12px rgba(0, 245, 160, 0.2);
+    }
+
+    .logo-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .logo-title span {
+      color: var(--color-allow);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .system-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--color-allow);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--color-allow);
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: #080c12;
+      border: 1px solid var(--border-subtle);
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    .nav-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 7px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: 3px;
+    }
+
+    .nav-tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .nav-tab-btn.active {
+      background: #151d27;
+      border-color: var(--border-card);
+      color: var(--color-allow);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Main Container */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 40px 30px 60px;
+    }
+
+    /* Page Heading */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 35px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .section-eyebrow {
+      color: var(--color-allow);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .page-title {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+
+    .page-desc {
+      color: var(--text-muted);
+      font-size: 14px;
+      max-width: 640px;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Standard Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.2s;
+      border: 1px solid var(--border-card);
+      background: var(--bg-card);
+      color: var(--text-main);
+    }
+
+    .btn:hover {
+      background: var(--bg-card-hover);
+      border-color: #3b4756;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--color-allow);
+      border-color: var(--color-allow);
+      color: #04110b;
+    }
+
+    .btn-primary:hover {
+      background: #45ffbd;
+      border-color: #45ffbd;
+      box-shadow: 0 0 15px rgba(0, 245, 160, 0.3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border-color: #245a47;
+      color: var(--color-allow);
+    }
+
+    .btn-outline:hover {
+      background: rgba(0, 245, 160, 0.08);
+      border-color: var(--color-allow);
+    }
+
+    /* Metric Cards Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 35px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      padding: 22px;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .stat-card:hover {
+      border-color: #3b4756;
+      transform: translateY(-2px);
+    }
+
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: transparent;
+    }
+
+    .stat-card.card-accent-allow::after { background: var(--color-allow); }
+    .stat-card.card-accent-challenge::after { background: var(--color-challenge); }
+    .stat-card.card-accent-review::after { background: var(--color-review); }
+    .stat-card.card-accent-block::after { background: var(--color-block); }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--text-main);
+    }
+
+    .stat-desc {
+      color: var(--text-dim);
+      font-size: 11px;
+      margin-top: 6px;
+    }
+
+    /* Dashboard Layout Sections */
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 3px;
+      margin-bottom: 30px;
+    }
+
+    .card-header-row {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .card-header-row h2 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    /* Risk Distribution Grid */
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding: 24px;
+    }
+
+    .risk-card {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      padding: 18px;
+      border-radius: 3px;
+    }
+
+    .risk-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+    }
+
+    .risk-name {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+    }
+
+    .risk-count {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .risk-bar {
+      height: 6px;
+      background: #18202b;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .risk-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .risk-low .risk-name, .risk-low .risk-count { color: var(--color-allow); }
+    .risk-low .risk-bar-fill { background: var(--color-allow); }
+
+    .risk-medium .risk-name, .risk-medium .risk-count { color: var(--color-challenge); }
+    .risk-medium .risk-bar-fill { background: var(--color-challenge); }
+
+    .risk-high .risk-name, .risk-high .risk-count { color: var(--color-review); }
+    .risk-high .risk-bar-fill { background: var(--color-review); }
+
+    .risk-critical .risk-name, .risk-critical .risk-count { color: var(--color-block); }
+    .risk-critical .risk-bar-fill { background: var(--color-block); }
+
+    .risk-percentage {
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+
+    /* Timeline Chart */
+    .timeline-container {
+      padding: 24px;
+    }
+
+    .timeline-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      height: 160px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 12px;
+    }
+
+    .timeline-bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .timeline-bar {
+      width: 100%;
+      max-width: 38px;
+      border-radius: 3px 3px 0 0;
+      transition: height 0.4s ease, opacity 0.2s;
+    }
+
+    .timeline-bar-col:hover .timeline-bar {
+      opacity: 0.8;
+      transform: scaleY(1.03);
+    }
+
+    .timeline-score {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      margin-top: 6px;
+      color: var(--text-muted);
+    }
+
+    .timeline-label {
+      font-size: 9px;
+      color: var(--text-dim);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 60px;
+    }
+
+    /* Tooltip */
+    .timeline-bar-col:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #151d27;
+      border: 1px solid var(--border-card);
+      color: #fff;
+      padding: 6px 10px;
+      font-size: 10px;
+      white-space: nowrap;
+      border-radius: 3px;
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    /* Filters & Search Toolbar */
+    .table-toolbar {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-card);
+      padding: 8px 14px;
+      border-radius: 3px;
+      flex: 1;
+      max-width: 380px;
+    }
+
+    .search-box svg {
+      width: 14px;
+      height: 14px;
+      fill: var(--text-dim);
+    }
+
+    .search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-main);
+      font-size: 12px;
+      width: 100%;
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      padding: 5px 12px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      background: #111721;
+      border: 1px solid var(--border-card);
+      color: var(--text-muted);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .pill-btn:hover {
+      border-color: #3f4c5e;
+      color: var(--text-main);
+    }
+
+    .pill-btn.active {
+      background: rgba(0, 245, 160, 0.1);
+      border-color: var(--color-allow);
+      color: var(--color-allow);
+    }
+
+    /* Data Tables */
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    .data-table th {
+      padding: 14px 20px;
+      color: var(--text-dim);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: #090d13;
+    }
+
+    .data-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid #141b24;
+      color: #b3bcc7;
+    }
+
+    .data-table tbody tr {
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(0, 245, 160, 0.025);
+    }
+
+    .user-cell-name {
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-cell-id {
+      color: var(--text-dim);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    .table-score {
+      font-size: 16px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: #fff;
+    }
+
+    /* Badges */
+    .badge-tag {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      border-radius: 2px;
+      text-transform: uppercase;
+    }
+
+    .badge-allow {
+      color: var(--color-allow);
+      background: var(--color-allow-bg);
+      border: 1px solid var(--color-allow-border);
+    }
+
+    .badge-monitor {
+      color: var(--color-challenge);
+      background: var(--color-challenge-bg);
+      border: 1px solid var(--color-challenge-border);
+    }
+
+    .badge-challenge {
+      color: var(--color-challenge);
+      background: var(--color-challenge-bg);
+      border: 1px solid var(--color-challenge-border);
+    }
+
+    .badge-review {
+      color: var(--color-review);
+      background: var(--color-review-bg);
+      border: 1px solid var(--color-review-border);
+    }
+
+    .badge-block {
+      color: var(--color-block);
+      background: var(--color-block-bg);
+      border: 1px solid var(--color-block-border);
+    }
+
+    .badge-active {
+      color: #94a3b8;
+      background: #17212e;
+      border: 1px solid #2d3c4e;
+    }
+
+    .badge-flagged {
+      color: var(--color-challenge);
+      background: var(--color-challenge-bg);
+      border: 1px solid var(--color-challenge-border);
+    }
+
+    .badge-restricted {
+      color: var(--color-block);
+      background: var(--color-block-bg);
+      border: 1px solid var(--color-block-border);
+    }
+
+    .mono-cell {
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+
+    /* Interactive Signup Demo Form */
+    .demo-sandbox {
+      display: grid;
+      grid-template-columns: 1fr 480px;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .sandbox-hero {
+      padding: 10px 0;
+    }
+
+    .sandbox-hero h1 {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .sandbox-hero h1 span {
+      color: var(--color-allow);
+    }
+
+    .sandbox-hero p {
+      color: var(--text-muted);
+      font-size: 16px;
+      line-height: 1.7;
+      margin-bottom: 25px;
+    }
+
+    .preset-card {
+      background: #090e15;
+      border: 1px solid var(--border-card);
+      padding: 20px;
+      border-radius: 4px;
+      margin-bottom: 25px;
+    }
+
+    .preset-card h3 {
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      color: var(--color-allow);
+      margin-bottom: 12px;
+    }
+
+    .preset-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .preset-btn {
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 3px;
+      background: #111822;
+      border: 1px solid var(--border-card);
+      color: #d1d9e2;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .preset-btn:hover {
+      background: #182230;
+      border-color: var(--color-allow);
+      color: #fff;
+    }
+
+    .signup-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      padding: 35px;
+      border-radius: 4px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-card);
+      color: #fff;
+      padding: 13px 16px;
+      font-size: 13px;
+      outline: none;
+      transition: border 0.2s;
+      border-radius: 3px;
+    }
+
+    .form-group input:focus {
+      border-color: var(--color-allow);
+      box-shadow: 0 0 0 2px rgba(0, 245, 160, 0.1);
+    }
+
+    .simulated-telemetry {
+      background: #090d14;
+      border: 1px solid #1a222e;
+      padding: 14px;
+      border-radius: 3px;
+      margin-bottom: 22px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .sim-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .sim-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .sim-row span:last-child {
+      color: #a0aec0;
+      font-family: var(--font-mono);
+    }
+
+    /* Real-Time Result Banner */
+    .result-panel {
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 4px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-allow {
+      background: var(--color-allow-bg);
+      border: 1px solid var(--color-allow-border);
+      color: var(--color-allow);
+    }
+
+    .result-challenge {
+      background: var(--color-challenge-bg);
+      border: 1px solid var(--color-challenge-border);
+      color: var(--color-challenge);
+    }
+
+    .result-review {
+      background: var(--color-review-bg);
+      border: 1px solid var(--color-review-border);
+      color: var(--color-review);
+    }
+
+    .result-block {
+      background: var(--color-block-bg);
+      border: 1px solid var(--color-block-border);
+      color: var(--color-block);
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .result-desc {
+      font-size: 12px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      margin-bottom: 14px;
+    }
+
+    .verification-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px dashed var(--color-challenge-border);
+      padding: 14px;
+      border-radius: 3px;
+      margin-top: 14px;
+    }
+
+    .verification-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 11px;
+      color: #e2e8f0;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    .verification-label input {
+      margin-top: 2px;
+    }
+
+    /* Slide-Over Drawer Modal */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 580px;
+      max-width: 90vw;
+      background: #0d121a;
+      border-left: 1px solid var(--border-card);
+      z-index: 101;
+      display: none;
+      flex-direction: column;
+      box-shadow: -15px 0 50px rgba(0, 0, 0, 0.7);
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    .drawer-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .drawer-title-group h3 {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .drawer-title-group p {
+      color: var(--text-dim);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: 1px solid var(--border-card);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 3px;
+      font-size: 16px;
+    }
+
+    .close-btn:hover {
+      color: #fff;
+      border-color: #4b5869;
+    }
+
+    .drawer-content {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .drawer-section {
+      margin-bottom: 24px;
+    }
+
+    .drawer-section-title {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: var(--color-allow);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .score-breakdown-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .score-card {
+      background: #090e15;
+      border: 1px solid var(--border-card);
+      padding: 12px;
+      border-radius: 3px;
+      text-align: center;
+    }
+
+    .score-card-label {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .score-card-val {
+      font-size: 20px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+
+    .signal-item {
+      background: #080c13;
+      border: 1px solid var(--border-subtle);
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      border-radius: 3px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .signal-info {
+      flex: 1;
+    }
+
+    .signal-type {
+      font-size: 11px;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-bottom: 3px;
+    }
+
+    .signal-msg {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .signal-points {
+      font-size: 12px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--color-review);
+    }
+
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      font-size: 11px;
+    }
+
+    .telemetry-box {
+      background: #080c13;
+      border: 1px solid var(--border-subtle);
+      padding: 10px 14px;
+      border-radius: 3px;
+    }
+
+    .telemetry-label {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.8px;
+      margin-bottom: 4px;
+    }
+
+    .telemetry-val {
+      font-family: var(--font-mono);
+      color: #cbd5e1;
+      word-break: break-all;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 24px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-dim);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    footer span {
+      color: var(--color-allow);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .risk-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .demo-sandbox {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .navbar {
+        padding: 0 16px;
+      }
+      .system-status {
+        display: none;
+      }
+      .container {
+        padding: 24px 16px;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .risk-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- OFFLINE DEMO NOTICE BANNER -->
+  <div class="demo-banner">
+    <div class="demo-notice-text">
+      <span class="demo-badge">STANDALONE DEMO</span>
+      <span><strong>Offline Evaluation Mode</strong> (file:// protocol) — Client-side heuristics & sample telemetry. Zero backend, Node.js, or server required.</span>
+    </div>
+    <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-dim);">
+      v1.0.0-standalone
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo-container" onclick="switchView('dashboard')">
+      <div class="logo-badge">F</div>
+      <div class="logo-title">FRAUD<span>GUARD</span></div>
+    </div>
+
+    <div class="nav-actions">
+      <div class="system-status">
+        <span class="status-dot"></span>
+        <span>PROTECTION ACTIVE</span>
+      </div>
+
+      <div class="nav-tabs">
+        <button class="nav-tab-btn active" id="tab-dashboard" onclick="switchView('dashboard')">
+          ADMIN CONSOLE
+        </button>
+        <button class="nav-tab-btn" id="tab-signup" onclick="switchView('signup')">
+          DETECTION SANDBOX
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================
+       VIEW 1: ADMIN INTELLIGENCE DASHBOARD
+       ======================================================== -->
+  <main class="container" id="view-dashboard">
+
+    <div class="page-header">
+      <div>
+        <div class="section-eyebrow">ADMINISTRATOR INTELLIGENCE CONSOLE</div>
+        <h1 class="page-title">Fraud & Abuse Analytics</h1>
+        <p class="page-desc">
+          Continuous monitoring of multi-account abuse, device fingerprint reuse, IP velocity spikes, and automated bot networks.
+        </p>
+      </div>
+
+      <div class="header-buttons">
+        <button class="btn btn-outline" onclick="resetToDemoData()">
+          ⟲ RESET SAMPLE DATA
+        </button>
+        <button class="btn btn-primary" onclick="switchView('signup')">
+          + TEST ATTACK SANDBOX
+        </button>
+      </div>
+    </div>
+
+    <!-- STAT METRIC CARDS -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">TOTAL ACCOUNTS</div>
+        <div class="stat-value" id="stat-total-users">0</div>
+        <div class="stat-desc">Analyzed in session</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">AVERAGE RISK</div>
+        <div class="stat-value" id="stat-avg-risk">0.0</div>
+        <div class="stat-desc">Overall threat score (0-100)</div>
+      </div>
+
+      <div class="stat-card card-accent-challenge">
+        <div class="stat-label">CHALLENGED</div>
+        <div class="stat-value" id="stat-challenge-count" style="color: var(--color-challenge);">0</div>
+        <div class="stat-desc">Verification required</div>
+      </div>
+
+      <div class="stat-card card-accent-block">
+        <div class="stat-label">BLOCKED</div>
+        <div class="stat-value" id="stat-blocked-count" style="color: var(--color-block);">0</div>
+        <div class="stat-desc">Prevented malicious attempts</div>
+      </div>
+
+      <div class="stat-card card-accent-review">
+        <div class="stat-label">FRAUD CLUSTERS</div>
+        <div class="stat-value" id="stat-cluster-count" style="color: var(--color-review);">0</div>
+        <div class="stat-desc">Linked-account rings</div>
+      </div>
+    </section>
+
+    <!-- THREAT PROFILE RISK DISTRIBUTION -->
+    <section class="section-card">
+      <div class="card-header-row">
+        <div>
+          <div class="section-eyebrow">THREAT PROFILE</div>
+          <h2>Risk Level Distribution</h2>
+        </div>
+        <div style="font-size: 11px; color: var(--text-dim);">
+          5-Tier Graduated Decision Architecture
+        </div>
+      </div>
+
+      <div class="risk-grid">
+        <!-- LOW -->
+        <div class="risk-card risk-low">
+          <div class="risk-card-head">
+            <span class="risk-name">LOW RISK (ALLOW)</span>
+            <span class="risk-count" id="count-low">0</span>
+          </div>
+          <div class="risk-bar">
+            <div class="risk-bar-fill" id="bar-low" style="width: 0%;"></div>
+          </div>
+          <div class="risk-percentage" id="pct-low">0% of signups</div>
+        </div>
+
+        <!-- MEDIUM / CHALLENGE -->
+        <div class="risk-card risk-medium">
+          <div class="risk-card-head">
+            <span class="risk-name">MEDIUM (CHALLENGE)</span>
+            <span class="risk-count" id="count-medium">0</span>
+          </div>
+          <div class="risk-bar">
+            <div class="risk-bar-fill" id="bar-medium" style="width: 0%;"></div>
+          </div>
+          <div class="risk-percentage" id="pct-medium">0% of signups</div>
+        </div>
+
+        <!-- HIGH / REVIEW -->
+        <div class="risk-card risk-high">
+          <div class="risk-card-head">
+            <span class="risk-name">HIGH (MANUAL REVIEW)</span>
+            <span class="risk-count" id="count-high">0</span>
+          </div>
+          <div class="risk-bar">
+            <div class="risk-bar-fill" id="bar-high" style="width: 0%;"></div>
+          </div>
+          <div class="risk-percentage" id="pct-high">0% of signups</div>
+        </div>
+
+        <!-- CRITICAL / BLOCK -->
+        <div class="risk-card risk-critical">
+          <div class="risk-card-head">
+            <span class="risk-name">CRITICAL (BLOCKED)</span>
+            <span class="risk-count" id="count-critical">0</span>
+          </div>
+          <div class="risk-bar">
+            <div class="risk-bar-fill" id="bar-critical" style="width: 0%;"></div>
+          </div>
+          <div class="risk-percentage" id="pct-critical">0% of signups</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCORE TIMELINE -->
+    <section class="section-card">
+      <div class="card-header-row">
+        <div>
+          <div class="section-eyebrow">CHRONOLOGICAL FEED</div>
+          <h2>Risk Score per Recent Signup</h2>
+        </div>
+        <div style="font-size: 11px; color: var(--text-dim);">
+          Hover bar for details • Click bar to inspect user
+        </div>
+      </div>
+
+      <div class="timeline-container">
+        <div class="timeline-chart" id="timeline-chart">
+          <!-- Timeline bars rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- FRAUD CLUSTERS (MULTI-ACCOUNT ABUSE) -->
+    <section class="section-card">
+      <div class="card-header-row">
+        <div>
+          <div class="section-eyebrow">MULTI-ACCOUNT CORRELATION</div>
+          <h2>Likely-Linked Account Clusters</h2>
+        </div>
+        <div style="font-size: 11px; color: var(--text-dim);">
+          Correlated via Device Fingerprint & Shared IP Infrastructure
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>CLUSTER TYPE</th>
+              <th>MEMBERS</th>
+              <th>SCORE</th>
+              <th>CORRELATION REASON</th>
+              <th>LINKED ACCOUNTS</th>
+              <th>STATUS</th>
+              <th>ADMIN ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="clusters-table-body">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RECENT SIGNUPS & THREAT INTELLIGENCE TABLE -->
+    <section class="section-card">
+      <div class="card-header-row">
+        <div>
+          <div class="section-eyebrow">ACCOUNT TELEMETRY</div>
+          <h2>Recent Signup Intelligence</h2>
+        </div>
+        <div style="font-size: 11px; color: var(--color-allow);">
+          ● <span id="feed-count">0</span> ACCOUNTS RECORDED
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="table-toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input type="text" id="search-input" placeholder="Search by name, email, or IP address..." oninput="filterUsersTable()">
+        </div>
+
+        <div class="filter-pills">
+          <button class="pill-btn active" data-filter="all" onclick="setRiskFilter('all')">ALL</button>
+          <button class="pill-btn" data-filter="critical" onclick="setRiskFilter('critical')">CRITICAL (BLOCK)</button>
+          <button class="pill-btn" data-filter="high" onclick="setRiskFilter('high')">HIGH (REVIEW)</button>
+          <button class="pill-btn" data-filter="medium" onclick="setRiskFilter('medium')">MEDIUM (CHALLENGE)</button>
+          <button class="pill-btn" data-filter="low" onclick="setRiskFilter('low')">LOW (ALLOW)</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>USER</th>
+              <th>EMAIL</th>
+              <th>RISK SCORE</th>
+              <th>RISK LEVEL</th>
+              <th>DECISION ACTION</th>
+              <th>IP ADDRESS</th>
+              <th>DEVICE FINGERPRINT</th>
+              <th>TIMESTAMP</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ========================================================
+       VIEW 2: INTERACTIVE DETECTION SANDBOX (LIVE SIMULATION)
+       ======================================================== -->
+  <main class="container" id="view-signup" style="display: none;">
+
+    <div class="demo-sandbox">
+      
+      <!-- Left Column: Explanation & Preset Attack Scenarios -->
+      <div class="sandbox-hero">
+        <div class="section-eyebrow">ATTACK VECTOR SIMULATION</div>
+        <h1>Test FraudGuard <span>Protection</span></h1>
+        <p>
+          Simulate real-world onboarding traffic against FraudGuard's detection heuristics.
+          Observe how behavioral telemetry, disposable email detection, and device reuse trigger graduated responses.
+        </p>
+
+        <div class="preset-card">
+          <h3>⚡ QUICK ATTACK & USER PRESETS</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+            Select a preset to automatically populate form fields and behavioral telemetry:
+          </p>
+
+          <div class="preset-buttons">
+            <button class="preset-btn" onclick="applyPreset('legit')">
+              ✓ Genuine Human User (Allow)
+            </button>
+            <button class="preset-btn" onclick="applyPreset('tempmail')">
+              ⚠ Disposable Email Abuser (Review)
+            </button>
+            <button class="preset-btn" onclick="applyPreset('subaddress')">
+              🔍 Plus-Alias Promo Reuser (Challenge)
+            </button>
+            <button class="preset-btn" onclick="applyPreset('device_reuse')">
+              🔗 Linked Device Cluster (Challenge)
+            </button>
+            <button class="preset-btn" onclick="applyPreset('bot')">
+              ⛔ Automated Headless Bot (Block)
+            </button>
+          </div>
+        </div>
+
+        <div style="background: #0c1016; border: 1px solid var(--border-card); padding: 18px; border-radius: 4px;">
+          <h4 style="font-size: 11px; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px;">HOW CLIENT-SIDE SCORING WORKS:</h4>
+          <ul style="font-size: 12px; color: #8b949e; padding-left: 18px; line-height: 1.8;">
+            <li><strong>Rule Engine (60%):</strong> Evaluates disposable domains, email aliases, device/IP counts, and automation user-agents.</li>
+            <li><strong>Behavior Engine (25%):</strong> Evaluates form completion time (&lt;3s), mouse movement, and paste events.</li>
+            <li><strong>ML Anomaly (15%):</strong> Statistical distance vector over 12 behavioral dimensions.</li>
+            <li><strong>Graduated Tiers:</strong> ALLOW (&lt;30) → MONITOR (30-49) → CHALLENGE (50-69) → REVIEW (70-84) → BLOCK (≥85).</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Signup Form -->
+      <div class="signup-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <div>
+            <h2 style="font-size: 20px; font-weight: 800;">Create Account</h2>
+            <p style="font-size: 12px; color: var(--text-muted);">Simulated Free Trial Onboarding</p>
+          </div>
+          <div style="font-size: 28px;">🛡️</div>
+        </div>
+
+        <form id="signup-form" onsubmit="handleDemoSignup(event)">
+          <div class="form-group">
+            <label>FULL NAME</label>
+            <input type="text" id="form-name" required placeholder="e.g. Jane Doe">
+          </div>
+
+          <div class="form-group">
+            <label>EMAIL ADDRESS</label>
+            <input type="email" id="form-email" required placeholder="e.g. jane@example.com">
+          </div>
+
+          <div class="form-group">
+            <label>PASSWORD</label>
+            <input type="password" id="form-password" required placeholder="••••••••••••">
+          </div>
+
+          <!-- Live Telemetry Monitor Box -->
+          <div class="simulated-telemetry">
+            <div style="font-weight: 700; color: #718096; margin-bottom: 8px; font-size: 9px; letter-spacing: 1px;">
+              ACTIVE SESSION TELEMETRY:
+            </div>
+            <div class="sim-row">
+              <span>Form fill duration:</span>
+              <span id="telemetry-time">0.0s</span>
+            </div>
+            <div class="sim-row">
+              <span>Mouse cursor movements:</span>
+              <span id="telemetry-mouse">0 events</span>
+            </div>
+            <div class="sim-row">
+              <span>Clipboard paste events:</span>
+              <span id="telemetry-pastes">0</span>
+            </div>
+            <div class="sim-row">
+              <span>Device Fingerprint (SHA-256):</span>
+              <span id="telemetry-device">fp_live_browser</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;" id="btn-submit-signup">
+            EVALUATE SIGNUP RISK →
+          </button>
+        </form>
+
+        <!-- Dynamic Detection Result Banner -->
+        <div id="signup-result" style="display: none;"></div>
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- ========================================================
+       ACCOUNT INSPECTION DRAWER (SLIDE-OVER MODAL)
+       ======================================================== -->
+  <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+
+  <aside class="drawer" id="account-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <h3 id="drawer-user-name">Account Deep-Dive</h3>
+        <p id="drawer-user-sub">USER ID #-- • --</p>
+      </div>
+      <button class="close-btn" onclick="closeDrawer()">✕</button>
+    </div>
+
+    <div class="drawer-content">
+      
+      <!-- Overall Risk Meter -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">RISK ASSESSMENT SUMMARY</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <span style="font-size: 13px; font-weight: 700;">Final Risk Score</span>
+          <span style="font-size: 26px; font-weight: 800; font-family: var(--font-mono);" id="drawer-final-score">0</span>
+        </div>
+        <div class="risk-bar" style="height: 8px;">
+          <div class="risk-bar-fill" id="drawer-score-bar" style="width: 0%;"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+          <span class="badge-tag" id="drawer-level-badge">LOW</span>
+          <span class="badge-tag" id="drawer-action-badge">ALLOW</span>
+        </div>
+      </div>
+
+      <!-- Score Weight Breakdown -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">WEIGHTED SCORE FUSION</div>
+        <div class="score-breakdown-grid">
+          <div class="score-card">
+            <div class="score-card-label">RULE SCORE (60%)</div>
+            <div class="score-card-val" id="drawer-rule-score">0</div>
+          </div>
+          <div class="score-card">
+            <div class="score-card-label">BEHAVIOR (25%)</div>
+            <div class="score-card-val" id="drawer-behavior-score">0</div>
+          </div>
+          <div class="score-card">
+            <div class="score-card-label">ML ANOMALY (15%)</div>
+            <div class="score-card-val" id="drawer-ml-score">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Triggered Signals List -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">DETECTED RISK SIGNALS</div>
+        <div id="drawer-signals-list">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Behavioral Telemetry Details -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">CLIENT BEHAVIORAL INDICATORS</div>
+        <div class="telemetry-grid">
+          <div class="telemetry-box">
+            <div class="telemetry-label">FORM FILL TIME</div>
+            <div class="telemetry-val" id="drawer-tel-time">--</div>
+          </div>
+          <div class="telemetry-box">
+            <div class="telemetry-label">MOUSE MOVEMENTS</div>
+            <div class="telemetry-val" id="drawer-tel-mouse">--</div>
+          </div>
+          <div class="telemetry-box">
+            <div class="telemetry-label">CLIPBOARD PASTES</div>
+            <div class="telemetry-val" id="drawer-tel-pastes">--</div>
+          </div>
+          <div class="telemetry-box">
+            <div class="telemetry-label">TAB / FOCUS SWITCHES</div>
+            <div class="telemetry-val" id="drawer-tel-focus">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Device & Hardware Environment -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">DEVICE & NETWORK CONTEXT</div>
+        <div class="telemetry-grid">
+          <div class="telemetry-box" style="grid-column: span 2;">
+            <div class="telemetry-label">DEVICE FINGERPRINT (SHA-256)</div>
+            <div class="telemetry-val" id="drawer-tel-device">--</div>
+          </div>
+          <div class="telemetry-box">
+            <div class="telemetry-label">IP ADDRESS</div>
+            <div class="telemetry-val" id="drawer-tel-ip">--</div>
+          </div>
+          <div class="telemetry-box">
+            <div class="telemetry-label">SCREEN RESOLUTION</div>
+            <div class="telemetry-val" id="drawer-tel-screen">--</div>
+          </div>
+          <div class="telemetry-box">
+            <div class="telemetry-label">TIMEZONE</div>
+            <div class="telemetry-val" id="drawer-tel-tz">--</div>
+          </div>
+          <div class="telemetry-box">
+            <div class="telemetry-label">USER AGENT</div>
+            <div class="telemetry-val" id="drawer-tel-ua" style="font-size: 10px;">--</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- FOOTER -->
+  <footer>
+    <div>
+      FRAUDGUARD <span>•</span> MULTI-ACCOUNT ABUSE & PROMO FRAUD PREVENTION SYSTEM
+    </div>
+    <div>
+      STANDALONE DEMO <span>•</span> NO SERVER REQUIRED
+    </div>
+  </footer>
+
+
+  <!-- ========================================================
+       STANDALONE DEMO APPLICATION LOGIC (OFFLINE / VANILLA JS)
+       ======================================================== -->
+  <script>
+    // --------------------------------------------------------
+    // DISPOSABLE EMAIL BLACKLIST (OFFLINE MIRROR)
+    // --------------------------------------------------------
+    const DISPOSABLE_DOMAINS = new Set([
+      "tempmail.com", "10minutemail.com", "guerrillamail.com", "guerrillamail.biz",
+      "mailinator.com", "yopmail.com", "temp-mail.org", "throwawaymail.com",
+      "maildrop.cc", "sharklasers.com", "dispostable.com", "trashmail.com",
+      "getnada.com", "nada.ltd", "fakeinbox.com", "crazymailing.com"
+    ]);
+
+    // --------------------------------------------------------
+    // REALISTIC SAMPLE DEMONSTRATION DATA
+    // --------------------------------------------------------
+    const INITIAL_USERS = [
+      {
+        id: 101,
+        name: "Devon Reed",
+        email: "devon.reed@techworks.io",
+        ip: "198.51.100.42",
+        device: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        risk_score: 14,
+        risk_level: "LOW",
+        action: "ALLOW",
+        rule_score: 0,
+        behavior_score: 5,
+        ml_score: 12,
+        time: 14.8,
+        mouse: 42,
+        pastes: 0,
+        focus: 0,
+        screen: "1920x1080",
+        tz: "America/New_York",
+        ua: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/122.0.0.0",
+        created_at: "10 mins ago",
+        signals: []
+      },
+      {
+        id: 102,
+        name: "Claire Dupont",
+        email: "c.dupont@financecorp.fr",
+        ip: "203.0.113.15",
+        device: "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069",
+        risk_score: 22,
+        risk_level: "LOW",
+        action: "ALLOW",
+        rule_score: 8,
+        behavior_score: 10,
+        ml_score: 18,
+        time: 11.2,
+        mouse: 28,
+        pastes: 0,
+        focus: 1,
+        screen: "1440x900",
+        tz: "Europe/Paris",
+        ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Firefox/123.0",
+        created_at: "24 mins ago",
+        signals: [
+          { type: "IP_REUSE", severity: "LOW", points: 8, message: "IP address has been observed on 1 previous signup" }
+        ]
+      },
+      {
+        id: 103,
+        name: "Alex V.",
+        email: "alex.mercer+promo1@gmail.com",
+        ip: "192.0.2.89",
+        device: "cluster_alpha_7a89d1b0923e4f71a9382f",
+        risk_score: 56,
+        risk_level: "MEDIUM",
+        action: "CHALLENGE",
+        rule_score: 35,
+        behavior_score: 24,
+        ml_score: 40,
+        time: 4.1,
+        mouse: 12,
+        pastes: 2,
+        focus: 2,
+        screen: "1366x768",
+        tz: "Asia/Kolkata",
+        ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/121.0.0.0",
+        created_at: "38 mins ago",
+        signals: [
+          { type: "SUBADDRESS_EMAIL_ALIAS", severity: "MEDIUM", points: 10, message: "Email uses plus-addressing (+ alias) commonly used in promo abuse" },
+          { type: "DEVICE_REUSE", severity: "MEDIUM", points: 15, message: "Device already associated with 2 existing accounts" },
+          { type: "FAST_FORM_COMPLETION", severity: "LOW", points: 5, message: "Form completed quickly (4.1 seconds)" },
+          { type: "MULTIPLE_PASTE_EVENTS", severity: "MEDIUM", points: 10, message: "Multiple paste events detected (2 paste events)" }
+        ]
+      },
+      {
+        id: 104,
+        name: "Alex V. (Clone 2)",
+        email: "alex.mercer+promo2@gmail.com",
+        ip: "192.0.2.89",
+        device: "cluster_alpha_7a89d1b0923e4f71a9382f",
+        risk_score: 74,
+        risk_level: "HIGH",
+        action: "REVIEW",
+        rule_score: 58,
+        behavior_score: 32,
+        ml_score: 65,
+        time: 2.3,
+        mouse: 4,
+        pastes: 3,
+        focus: 3,
+        screen: "1366x768",
+        tz: "Asia/Kolkata",
+        ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/121.0.0.0",
+        created_at: "45 mins ago",
+        signals: [
+          { type: "EMAIL_ALIAS_REUSE", severity: "HIGH", points: 20, message: "Canonical mailbox 'alexmercer@gmail.com' already holds promotional account" },
+          { type: "DEVICE_REUSE", severity: "HIGH", points: 28, message: "Device already associated with 3 accounts" },
+          { type: "HIGH_VELOCITY", severity: "HIGH", points: 20, message: "3 signup attempts recorded within short window from same IP" },
+          { type: "FAST_FORM_COMPLETION", severity: "HIGH", points: 15, message: "Form completed unnaturally fast (2.3 seconds)" }
+        ]
+      },
+      {
+        id: 105,
+        name: "TempTrial99",
+        email: "freecredit99@tempmail.com",
+        ip: "198.51.100.177",
+        device: "9d3e8b11a4cf671239ab7d98341e009a",
+        risk_score: 78,
+        risk_level: "HIGH",
+        action: "REVIEW",
+        rule_score: 62,
+        behavior_score: 28,
+        ml_score: 68,
+        time: 2.8,
+        mouse: 6,
+        pastes: 2,
+        focus: 0,
+        screen: "1920x1080",
+        tz: "UTC",
+        ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
+        created_at: "1 hour ago",
+        signals: [
+          { type: "DISPOSABLE_EMAIL", severity: "HIGH", points: 30, message: "Disposable email domain detected (tempmail.com)" },
+          { type: "NUMERIC_EMAIL", severity: "MEDIUM", points: 8, message: "Email contains unusually high number of digits" },
+          { type: "FAST_FORM_COMPLETION", severity: "HIGH", points: 15, message: "Form completed unnaturally fast (2.8 seconds)" }
+        ]
+      },
+      {
+        id: 106,
+        name: "SeleniumBotX",
+        email: "bot_harvest_882@guerrillamail.com",
+        ip: "203.0.113.204",
+        device: "botnet_cluster_node_4489a2e1",
+        risk_score: 96,
+        risk_level: "CRITICAL",
+        action: "BLOCK",
+        rule_score: 95,
+        behavior_score: 44,
+        ml_score: 92,
+        time: 0.6,
+        mouse: 0,
+        pastes: 3,
+        focus: 0,
+        screen: "800x600",
+        tz: "UTC",
+        ua: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 HeadlessChrome/122.0.0.0",
+        created_at: "1.5 hours ago",
+        signals: [
+          { type: "AUTOMATION_BROWSER", severity: "CRITICAL", points: 30, message: "Automated browser environment detected (headless)" },
+          { type: "DISPOSABLE_EMAIL", severity: "HIGH", points: 30, message: "Disposable email domain detected (guerrillamail.com)" },
+          { type: "LOW_MOUSE_ACTIVITY", severity: "MEDIUM", points: 12, message: "Minimal or zero mouse cursor movement detected" },
+          { type: "FAST_FORM_COMPLETION", severity: "HIGH", points: 15, message: "Form completed unnaturally fast (0.6 seconds)" },
+          { type: "LOW_INTERACTION", severity: "LOW", points: 5, message: "Abnormally low human interaction recorded during signup" }
+        ]
+      },
+      {
+        id: 107,
+        name: "Marcus Vance",
+        email: "marcus.vance@techcorp.io",
+        ip: "198.51.100.88",
+        device: "4b9c1084227f91a8e9921b773820a441",
+        risk_score: 18,
+        risk_level: "LOW",
+        action: "ALLOW",
+        rule_score: 0,
+        behavior_score: 8,
+        ml_score: 14,
+        time: 12.4,
+        mouse: 34,
+        pastes: 0,
+        focus: 0,
+        screen: "2560x1440",
+        tz: "Europe/London",
+        ua: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+        created_at: "2 hours ago",
+        signals: []
+      },
+      {
+        id: 108,
+        name: "Elena Rostova",
+        email: "elena.rostova@globaltravel.org",
+        ip: "198.51.100.115",
+        device: "9e2a441098bb8172c3d4921f00a892b1",
+        risk_score: 25,
+        risk_level: "LOW",
+        action: "ALLOW",
+        rule_score: 8,
+        behavior_score: 12,
+        ml_score: 20,
+        time: 9.5,
+        mouse: 29,
+        pastes: 0,
+        focus: 1,
+        screen: "1920x1080",
+        tz: "Europe/Berlin",
+        ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0",
+        created_at: "2.5 hours ago",
+        signals: [
+          { type: "IP_REUSE", severity: "LOW", points: 8, message: "IP address has been observed on 1 previous signup" }
+        ]
+      }
+    ];
+
+    const INITIAL_CLUSTERS = [
+      {
+        id: 1,
+        cluster_type: "SHARED_DEVICE",
+        member_count: 2,
+        cluster_score: 85,
+        reason: "2 accounts share the same physical device hardware fingerprint",
+        members: ["Alex V. (CHALLENGE)", "Alex V. (Clone 2) (REVIEW)"],
+        status: "FLAGGED"
+      },
+      {
+        id: 2,
+        cluster_type: "SHARED_IP",
+        member_count: 2,
+        cluster_score: 75,
+        reason: "2 accounts originated from same residential proxy IP (192.0.2.89)",
+        members: ["Alex V. (CHALLENGE)", "Alex V. (Clone 2) (REVIEW)"],
+        status: "RESTRICTED"
+      }
+    ];
+
+    // State
+    let demoUsers = JSON.parse(JSON.stringify(INITIAL_USERS));
+    let demoClusters = JSON.parse(JSON.stringify(INITIAL_CLUSTERS));
+    let currentRiskFilter = "all";
+    let liveSessionStartTime = Date.now();
+    let liveMouseMoveCount = 0;
+    let livePasteCount = 0;
+
+    // Track real interactions on signup sandbox
+    window.addEventListener("mousemove", () => {
+      liveMouseMoveCount++;
+      const el = document.getElementById("telemetry-mouse");
+      if (el) el.textContent = `${liveMouseMoveCount} events`;
+    });
+
+    window.addEventListener("paste", () => {
+      livePasteCount++;
+      const el = document.getElementById("telemetry-pastes");
+      if (el) el.textContent = `${livePasteCount}`;
+    });
+
+    setInterval(() => {
+      const el = document.getElementById("telemetry-time");
+      if (el) {
+        const secs = ((Date.now() - liveSessionStartTime) / 1000).toFixed(1);
+        el.textContent = `${secs}s`;
+      }
+    }, 200);
+
+    // --------------------------------------------------------
+    // VIEW SWITCHING
+    // --------------------------------------------------------
+    function switchView(viewName) {
+      const dashView = document.getElementById("view-dashboard");
+      const signupView = document.getElementById("view-signup");
+      const tabDash = document.getElementById("tab-dashboard");
+      const tabSignup = document.getElementById("tab-signup");
+
+      if (viewName === "dashboard") {
+        dashView.style.display = "block";
+        signupView.style.display = "none";
+        tabDash.classList.add("active");
+        tabSignup.classList.remove("active");
+        renderDashboard();
+      } else {
+        dashView.style.display = "none";
+        signupView.style.display = "block";
+        tabDash.classList.remove("active");
+        tabSignup.classList.add("active");
+        liveSessionStartTime = Date.now();
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // --------------------------------------------------------
+    // DASHBOARD RENDERING
+    // --------------------------------------------------------
+    function renderDashboard() {
+      // 1. Metric Cards
+      const total = demoUsers.length;
+      document.getElementById("stat-total-users").textContent = total;
+
+      const sumRisk = demoUsers.reduce((acc, u) => acc + u.risk_score, 0);
+      const avg = total > 0 ? (sumRisk / total).toFixed(1) : "0.0";
+      document.getElementById("stat-avg-risk").textContent = avg;
+
+      const challenged = demoUsers.filter(u => u.action === "CHALLENGE").length;
+      document.getElementById("stat-challenge-count").textContent = challenged;
+
+      const blocked = demoUsers.filter(u => u.action === "BLOCK").length;
+      document.getElementById("stat-blocked-count").textContent = blocked;
+
+      document.getElementById("stat-cluster-count").textContent = demoClusters.length;
+      document.getElementById("feed-count").textContent = total;
+
+      // 2. Risk Distribution
+      const lowCount = demoUsers.filter(u => u.risk_level === "LOW").length;
+      const medCount = demoUsers.filter(u => u.risk_level === "MEDIUM").length;
+      const highCount = demoUsers.filter(u => u.risk_level === "HIGH").length;
+      const critCount = demoUsers.filter(u => u.risk_level === "CRITICAL").length;
+
+      document.getElementById("count-low").textContent = lowCount;
+      document.getElementById("bar-low").style.width = total ? `${(lowCount / total) * 100}%` : "0%";
+      document.getElementById("pct-low").textContent = total ? `${((lowCount / total) * 100).toFixed(0)}% of signups` : "0%";
+
+      document.getElementById("count-medium").textContent = medCount;
+      document.getElementById("bar-medium").style.width = total ? `${(medCount / total) * 100}%` : "0%";
+      document.getElementById("pct-medium").textContent = total ? `${((medCount / total) * 100).toFixed(0)}% of signups` : "0%";
+
+      document.getElementById("count-high").textContent = highCount;
+      document.getElementById("bar-high").style.width = total ? `${(highCount / total) * 100}%` : "0%";
+      document.getElementById("pct-high").textContent = total ? `${((highCount / total) * 100).toFixed(0)}% of signups` : "0%";
+
+      document.getElementById("count-critical").textContent = critCount;
+      document.getElementById("bar-critical").style.width = total ? `${(critCount / total) * 100}%` : "0%";
+      document.getElementById("pct-critical").textContent = total ? `${((critCount / total) * 100).toFixed(0)}% of signups` : "0%";
+
+      // 3. Timeline Chart
+      renderTimeline();
+
+      // 4. Clusters Table
+      renderClusters();
+
+      // 5. Users Table
+      filterUsersTable();
+    }
+
+    // --------------------------------------------------------
+    // TIMELINE RENDERING
+    // --------------------------------------------------------
+    function renderTimeline() {
+      const container = document.getElementById("timeline-chart");
+      container.innerHTML = "";
+
+      const usersToShow = demoUsers.slice(-10); // last 10
+      usersToShow.forEach(user => {
+        const col = document.createElement("div");
+        col.className = "timeline-bar-col";
+        col.setAttribute("data-tooltip", `${user.name} • Score: ${user.risk_score} (${user.action})`);
+        col.onclick = () => openDrawer(user.id);
+
+        let barColor = "var(--color-allow)";
+        if (user.risk_score >= 85) barColor = "var(--color-block)";
+        else if (user.risk_score >= 70) barColor = "var(--color-review)";
+        else if (user.risk_score >= 50) barColor = "var(--color-challenge)";
+
+        const barHeight = Math.max(8, (user.risk_score / 100) * 125);
+
+        col.innerHTML = `
+          <div class="timeline-bar" style="height: ${barHeight}px; background: ${barColor};"></div>
+          <div class="timeline-score">${user.risk_score}</div>
+          <div class="timeline-label">#${user.id}</div>
+        `;
+        container.appendChild(col);
+      });
+    }
+
+    // --------------------------------------------------------
+    // CLUSTERS RENDERING
+    // --------------------------------------------------------
+    function renderClusters() {
+      const tbody = document.getElementById("clusters-table-body");
+      tbody.innerHTML = "";
+
+      if (demoClusters.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-dim);">No active fraud clusters detected.</td></tr>`;
+        return;
+      }
+
+      demoClusters.forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><span class="badge-tag badge-review">${c.cluster_type}</span></td>
+          <td><strong style="color: #fff;">${c.member_count}</strong> accounts</td>
+          <td><span class="table-score" style="color: var(--color-review);">${c.cluster_score}</span></td>
+          <td>${c.reason}</td>
+          <td>${c.members.join("<br>")}</td>
+          <td><span class="badge-tag badge-${(c.status || "active").toLowerCase()}">${c.status || "ACTIVE"}</span></td>
+          <td>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn" style="padding: 4px 8px; font-size: 9px;" onclick="updateClusterStatus(${c.id}, 'FLAGGED')">FLAG</button>
+              <button class="btn" style="padding: 4px 8px; font-size: 9px;" onclick="updateClusterStatus(${c.id}, 'RESTRICTED')">RESTRICT</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateClusterStatus(id, newStatus) {
+      const c = demoClusters.find(item => item.id === id);
+      if (c) {
+        c.status = newStatus;
+        renderClusters();
+      }
+    }
+
+    // --------------------------------------------------------
+    // USERS TABLE & FILTERING
+    // --------------------------------------------------------
+    function setRiskFilter(filterKey) {
+      currentRiskFilter = filterKey;
+      document.querySelectorAll(".pill-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-filter") === filterKey);
+      });
+      filterUsersTable();
+    }
+
+    function filterUsersTable() {
+      const searchVal = document.getElementById("search-input").value.toLowerCase();
+      const tbody = document.getElementById("users-table-body");
+      tbody.innerHTML = "";
+
+      let filtered = demoUsers.filter(u => {
+        // Search filter
+        const matchSearch = u.name.toLowerCase().includes(searchVal) ||
+                            u.email.toLowerCase().includes(searchVal) ||
+                            u.ip.toLowerCase().includes(searchVal);
+        if (!matchSearch) return false;
+
+        // Risk filter
+        if (currentRiskFilter === "all") return true;
+        if (currentRiskFilter === "critical") return u.risk_level === "CRITICAL";
+        if (currentRiskFilter === "high") return u.risk_level === "HIGH";
+        if (currentRiskFilter === "medium") return u.risk_level === "MEDIUM";
+        if (currentRiskFilter === "low") return u.risk_level === "LOW";
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 30px; color: var(--text-dim);">No accounts match the active filter criteria.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.onclick = (e) => {
+          if (e.target.tagName !== "BUTTON") openDrawer(u.id);
+        };
+
+        const shortDevice = u.device.substring(0, 16) + "...";
+
+        tr.innerHTML = `
+          <td>
+            <div class="user-cell-name">
+              <span>${u.name}</span>
+            </div>
+            <div class="user-cell-id">#${u.id}</div>
+          </td>
+          <td>${u.email}</td>
+          <td><span class="table-score">${u.risk_score}</span></td>
+          <td><span class="badge-tag badge-${u.risk_level.toLowerCase()}">${u.risk_level}</span></td>
+          <td><span class="badge-tag badge-${u.action.toLowerCase()}">${u.action}</span></td>
+          <td class="mono-cell">${u.ip}</td>
+          <td class="mono-cell" title="${u.device}">${shortDevice}</td>
+          <td style="color: var(--text-dim); font-size: 11px;">${u.created_at}</td>
+          <td>
+            <button class="btn" style="padding: 4px 10px; font-size: 9px;" onclick="openDrawer(${u.id})">INSPECT</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --------------------------------------------------------
+    // ACCOUNT INSPECTION DRAWER
+    // --------------------------------------------------------
+    function openDrawer(userId) {
+      const user = demoUsers.find(u => u.id === userId);
+      if (!user) return;
+
+      document.getElementById("drawer-user-name").textContent = user.name;
+      document.getElementById("drawer-user-sub").textContent = `USER ID #${user.id} • ${user.email}`;
+
+      document.getElementById("drawer-final-score").textContent = user.risk_score;
+      const bar = document.getElementById("drawer-score-bar");
+      bar.style.width = `${user.risk_score}%`;
+      if (user.risk_score >= 85) bar.style.background = "var(--color-block)";
+      else if (user.risk_score >= 70) bar.style.background = "var(--color-review)";
+      else if (user.risk_score >= 50) bar.style.background = "var(--color-challenge)";
+      else bar.style.background = "var(--color-allow)";
+
+      const lvlBadge = document.getElementById("drawer-level-badge");
+      lvlBadge.textContent = user.risk_level;
+      lvlBadge.className = `badge-tag badge-${user.risk_level.toLowerCase()}`;
+
+      const actBadge = document.getElementById("drawer-action-badge");
+      actBadge.textContent = user.action;
+      actBadge.className = `badge-tag badge-${user.action.toLowerCase()}`;
+
+      // Weights
+      document.getElementById("drawer-rule-score").textContent = user.rule_score || 0;
+      document.getElementById("drawer-behavior-score").textContent = user.behavior_score || 0;
+      document.getElementById("drawer-ml-score").textContent = user.ml_score || 0;
+
+      // Signals
+      const sigContainer = document.getElementById("drawer-signals-list");
+      sigContainer.innerHTML = "";
+      if (!user.signals || user.signals.length === 0) {
+        sigContainer.innerHTML = `<div style="padding: 12px; color: var(--color-allow); font-size: 11px; border: 1px solid var(--border-subtle); background: var(--bg-input);">✓ No suspicious risk signals triggered. Clean profile.</div>`;
+      } else {
+        user.signals.forEach(s => {
+          const item = document.createElement("div");
+          item.className = "signal-item";
+          item.innerHTML = `
+            <div class="signal-info">
+              <div class="signal-type">${s.type}</div>
+              <div class="signal-msg">${s.message}</div>
+            </div>
+            <div class="signal-points">+${s.points} pts</div>
+          `;
+          sigContainer.appendChild(item);
+        });
+      }
+
+      // Telemetry
+      document.getElementById("drawer-tel-time").textContent = `${user.time}s`;
+      document.getElementById("drawer-tel-mouse").textContent = `${user.mouse} movements`;
+      document.getElementById("drawer-tel-pastes").textContent = `${user.pastes} pastes`;
+      document.getElementById("drawer-tel-focus").textContent = `${user.focus} changes`;
+
+      document.getElementById("drawer-tel-device").textContent = user.device;
+      document.getElementById("drawer-tel-ip").textContent = user.ip;
+      document.getElementById("drawer-tel-screen").textContent = user.screen;
+      document.getElementById("drawer-tel-tz").textContent = user.tz;
+      document.getElementById("drawer-tel-ua").textContent = user.ua;
+
+      document.getElementById("drawer-backdrop").style.display = "block";
+      document.getElementById("account-drawer").style.display = "flex";
+    }
+
+    function closeDrawer() {
+      document.getElementById("drawer-backdrop").style.display = "none";
+      document.getElementById("account-drawer").style.display = "none";
+    }
+
+    // --------------------------------------------------------
+    // PRESETS FOR DETECTION SANDBOX
+    // --------------------------------------------------------
+    function applyPreset(presetType) {
+      liveSessionStartTime = Date.now();
+      liveMouseMoveCount = 0;
+      livePasteCount = 0;
+
+      const nameInput = document.getElementById("form-name");
+      const emailInput = document.getElementById("form-email");
+      const passInput = document.getElementById("form-password");
+      const resultBox = document.getElementById("signup-result");
+      resultBox.style.display = "none";
+
+      passInput.value = "SecurePassword123!";
+
+      if (presetType === "legit") {
+        nameInput.value = "Julian Vance";
+        emailInput.value = "julian.vance@example.org";
+        liveSessionStartTime = Date.now() - 11500; // 11.5s
+        liveMouseMoveCount = 38;
+        livePasteCount = 0;
+        document.getElementById("telemetry-device").textContent = "fp_genuine_macbook_pro";
+      } else if (presetType === "tempmail") {
+        nameInput.value = "PromoHunter12";
+        emailInput.value = "freebonus99@tempmail.com";
+        liveSessionStartTime = Date.now() - 2100; // 2.1s
+        liveMouseMoveCount = 4;
+        livePasteCount = 2;
+        document.getElementById("telemetry-device").textContent = "fp_tempmail_browser_7a";
+      } else if (presetType === "subaddress") {
+        nameInput.value = "Alex Mercer";
+        emailInput.value = "alex.mercer+trial99@gmail.com";
+        liveSessionStartTime = Date.now() - 3800; // 3.8s
+        liveMouseMoveCount = 14;
+        livePasteCount = 1;
+        document.getElementById("telemetry-device").textContent = "cluster_alpha_7a89d1b0923e4f71a9382f";
+      } else if (presetType === "device_reuse") {
+        nameInput.value = "Sybil Account 3";
+        emailInput.value = "sybil3@example.com";
+        liveSessionStartTime = Date.now() - 4200; // 4.2s
+        liveMouseMoveCount = 8;
+        livePasteCount = 2;
+        document.getElementById("telemetry-device").textContent = "cluster_alpha_7a89d1b0923e4f71a9382f";
+      } else if (presetType === "bot") {
+        nameInput.value = "HeadlessBot_009";
+        emailInput.value = "botharvest@guerrillamail.com";
+        liveSessionStartTime = Date.now() - 500; // 0.5s
+        liveMouseMoveCount = 0;
+        livePasteCount = 3;
+        document.getElementById("telemetry-device").textContent = "botnet_headless_node_x";
+      }
+    }
+
+    // --------------------------------------------------------
+    // DEMO SIGNUP RISK EVALUATION (CLIENT-SIDE ENGINE)
+    // --------------------------------------------------------
+    function handleDemoSignup(e) {
+      e.preventDefault();
+
+      const name = document.getElementById("form-name").value.trim();
+      const email = document.getElementById("form-email").value.trim().lower();
+      const formFillTime = Math.max(0.5, ((Date.now() - liveSessionStartTime) / 1000));
+      const mouseMoves = liveMouseMoveCount;
+      const pastes = livePasteCount;
+      const deviceFp = document.getElementById("telemetry-device").textContent;
+
+      const signals = [];
+      let ruleScore = 0;
+      let behaviorScore = 0;
+
+      // 1. Email Analysis
+      const localPart = email.split("@")[0] || "";
+      const domain = email.split("@")[1] || "";
+
+      if (DISPOSABLE_DOMAINS.has(domain)) {
+        ruleScore += 30;
+        signals.push({
+          type: "DISPOSABLE_EMAIL",
+          severity: "HIGH",
+          points: 30,
+          message: `Disposable email domain detected (${domain})`
+        });
+      }
+
+      if (localPart.includes("+")) {
+        ruleScore += 10;
+        signals.push({
+          type: "SUBADDRESS_EMAIL_ALIAS",
+          severity: "MEDIUM",
+          points: 10,
+          message: "Email uses plus-addressing (+ alias) commonly used in promo abuse"
+        });
+      }
+
+      const digits = (localPart.match(/\d/g) || []).length;
+      if (digits >= 5) {
+        ruleScore += 8;
+        signals.push({
+          type: "NUMERIC_EMAIL",
+          severity: "MEDIUM",
+          points: 8,
+          message: "Email contains unusually high number of digits"
+        });
+      }
+
+      // Check existing cluster device
+      const deviceMatches = demoUsers.filter(u => u.device === deviceFp).length;
+      if (deviceMatches >= 3) {
+        ruleScore += 28;
+        signals.push({
+          type: "DEVICE_REUSE",
+          severity: "HIGH",
+          points: 28,
+          message: `Device already associated with ${deviceMatches} accounts`
+        });
+      } else if (deviceMatches >= 1) {
+        ruleScore += 15;
+        signals.push({
+          type: "DEVICE_REUSE",
+          severity: "MEDIUM",
+          points: 15,
+          message: `Device already associated with ${deviceMatches} account`
+        });
+      }
+
+      // Check bot UA
+      if (name.toLowerCase().includes("bot") || email.includes("headless")) {
+        ruleScore += 30;
+        signals.push({
+          type: "AUTOMATION_BROWSER",
+          severity: "CRITICAL",
+          points: 30,
+          message: "Automated browser environment detected"
+        });
+      }
+
+      // 2. Behavioral Scoring
+      if (formFillTime < 2.5) {
+        behaviorScore += 15;
+        signals.push({
+          type: "FAST_FORM_COMPLETION",
+          severity: "HIGH",
+          points: 15,
+          message: `Form completed unnaturally fast (${formFillTime.toFixed(1)} seconds)`
+        });
+      } else if (formFillTime < 5.0) {
+        behaviorScore += 5;
+        signals.push({
+          type: "FAST_FORM_COMPLETION",
+          severity: "LOW",
+          points: 5,
+          message: `Form completed quickly (${formFillTime.toFixed(1)} seconds)`
+        });
+      }
+
+      if (mouseMoves <= 2) {
+        behaviorScore += 12;
+        signals.push({
+          type: "LOW_MOUSE_ACTIVITY",
+          severity: "MEDIUM",
+          points: 12,
+          message: "Minimal or zero mouse cursor movement recorded"
+        });
+      }
+
+      if (pastes >= 3) {
+        behaviorScore += 15;
+        signals.push({
+          type: "MULTIPLE_PASTE_EVENTS",
+          severity: "HIGH",
+          points: 15,
+          message: `Heavy clipboard paste activity detected (${pastes} paste events)`
+        });
+      } else if (pastes >= 1) {
+        behaviorScore += 8;
+        signals.push({
+          type: "MULTIPLE_PASTE_EVENTS",
+          severity: "LOW",
+          points: 8,
+          message: `Paste activity detected (${pastes} paste events)`
+        });
+      }
+
+      // 3. ML Anomaly Score approximation
+      let mlScore = Math.min(100, Math.round((ruleScore * 0.45) + (behaviorScore * 0.75)));
+
+      // 4. Final Fusion
+      let finalScore = Math.round((ruleScore * 0.60) + (behaviorScore * 0.25) + (mlScore * 0.15));
+      if (deviceMatches >= 1 && signals.length >= 3) finalScore += 8;
+      finalScore = Math.max(0, Math.min(100, finalScore));
+
+      // 5. Tier
+      let action = "ALLOW";
+      let level = "LOW";
+      if (finalScore >= 85) { action = "BLOCK"; level = "CRITICAL"; }
+      else if (finalScore >= 70) { action = "REVIEW"; level = "HIGH"; }
+      else if (finalScore >= 50) { action = "CHALLENGE"; level = "MEDIUM"; }
+      else if (finalScore >= 30) { action = "MONITOR"; level = "LOW"; }
+
+      // Display Result
+      const resultBox = document.getElementById("signup-result");
+      resultBox.style.display = "block";
+      resultBox.className = `result-panel result-${action.toLowerCase()}`;
+
+      let resultHtml = `
+        <div class="result-header">
+          <span>Decision: ${action} (${level})</span>
+          <span style="font-family: var(--font-mono); font-size: 18px;">Risk: ${finalScore}/100</span>
+        </div>
+      `;
+
+      if (action === "BLOCK") {
+        resultHtml += `
+          <div class="result-desc">
+            ⛔ <strong>Account creation prevented.</strong> Critical threat signals indicate automated or coordinated abuse.
+          </div>
+        `;
+      } else if (action === "REVIEW") {
+        resultHtml += `
+          <div class="result-desc">
+            ⚠️ <strong>Account routed to manual security review.</strong> Multiple risk signals detected.
+          </div>
+        `;
+      } else if (action === "CHALLENGE") {
+        resultHtml += `
+          <div class="result-desc">
+            🔍 <strong>Additional Identity Verification Required.</strong> Suspicious velocity or device overlap detected.
+          </div>
+          <div class="verification-box" id="verification-step">
+            <label class="verification-label">
+              <input type="checkbox" id="verify-check" onchange="toggleVerifyBtn(this)">
+              I confirm this is not a duplicate account created to reclaim promotional credits.
+            </label>
+            <button type="button" class="btn btn-primary" id="btn-verify" disabled onclick="completeVerification(${finalScore})">
+              COMPLETE VERIFICATION →
+            </button>
+          </div>
+        `;
+      } else {
+        resultHtml += `
+          <div class="result-desc">
+            ✓ <strong>Account Approved!</strong> Normal human telemetry and valid email reputation.
+          </div>
+        `;
+      }
+
+      // Add to session button
+      resultHtml += `
+        <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11px; opacity: 0.8;">Signals triggered: ${signals.length}</span>
+          <button type="button" class="btn" style="font-size: 10px; padding: 6px 12px;" onclick="recordToDemoFeed('${name}', '${email}', ${finalScore}, '${level}', '${action}', ${ruleScore}, ${behaviorScore}, ${mlScore}, ${formFillTime.toFixed(1)}, ${mouseMoves}, ${pastes}, '${deviceFp}', ${JSON.stringify(signals).replace(/"/g, '&quot;')})">
+            + ADD TO LIVE ACTIVITY FEED
+          </button>
+        </div>
+      `;
+
+      resultBox.innerHTML = resultHtml;
+    }
+
+    function toggleVerifyBtn(cb) {
+      document.getElementById("btn-verify").disabled = !cb.checked;
+    }
+
+    function completeVerification(prevScore) {
+      const box = document.getElementById("verification-step");
+      box.innerHTML = `
+        <div style="color: var(--color-allow); font-size: 11px; font-weight: 700;">
+          ✓ Verification Complete! Graduated Action downgraded from CHALLENGE to ALLOW.
+        </div>
+      `;
+    }
+
+    function recordToDemoFeed(name, email, score, level, action, rule, beh, ml, time, mouse, pastes, device, signals) {
+      const newId = demoUsers.length ? Math.max(...demoUsers.map(u => u.id)) + 1 : 101;
+      const newUser = {
+        id: newId,
+        name: name,
+        email: email,
+        ip: "127.0.0.1 (Local)",
+        device: device,
+        risk_score: score,
+        risk_level: level,
+        action: action,
+        rule_score: rule,
+        behavior_score: beh,
+        ml_score: ml,
+        time: parseFloat(time),
+        mouse: parseInt(mouse),
+        pastes: parseInt(pastes),
+        focus: 0,
+        screen: `${window.screen.width}x${window.screen.height}`,
+        tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+        ua: navigator.userAgent,
+        created_at: "Just now",
+        signals: signals || []
+      };
+
+      demoUsers.unshift(newUser);
+      alert(`Account #${newId} (${name}) recorded in demo threat intelligence! Switching to Admin Console...`);
+      switchView("dashboard");
+    }
+
+    function resetToDemoData() {
+      if (confirm("Reset demo data to initial demonstration state?")) {
+        demoUsers = JSON.parse(JSON.stringify(INITIAL_USERS));
+        demoClusters = JSON.parse(JSON.stringify(INITIAL_CLUSTERS));
+        renderDashboard();
+      }
+    }
+
+    // Initialize on load
+    window.addEventListener("DOMContentLoaded", () => {
+      renderDashboard();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "fraudguard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multi-Account Abuse Detection & Fraudulent Signup Prevention System",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "preview": "npm --prefix frontend run preview",
+    "test": "node -e \"const {spawnSync}=require('child_process'); const fs=require('fs'); const candidates=[process.platform==='win32'?'backend/.venv/Scripts/python.exe':'backend/.venv/bin/python', process.platform==='win32'?'.venv/Scripts/python.exe':'.venv/bin/python']; const py=candidates.find(p=>fs.existsSync(p))||(process.platform==='win32'?'python':'python3'); const res=spawnSync(py, ['-m', 'pytest', 'backend/tests', '-v'], {stdio:'inherit'}); process.exit(res.status??1);\""
+  },
+  "keywords": [
+    "fraud-detection",
+    "abuse-prevention",
+    "cybersecurity",
+    "machine-learning",
+    "device-fingerprinting",
+    "behavioral-analytics"
+  ],
+  "author": "",
+  "license": "MIT"
+}
